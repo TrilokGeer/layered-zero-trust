@@ -12,7 +12,7 @@ case "$APP" in
         NAMESPACE="vault"
         PROJECT="$MAIN_CLUSTERGROUP_PROJECT"
         CHART_NAME="hashicorp-vault"
-        CHART_VERSION=0.1.*
+        CHART_VERSION="0.1.*"
 
     ;;
     "golang-external-secrets")
@@ -20,7 +20,7 @@ case "$APP" in
         NAMESPACE="golang-external-secrets"
         PROJECT="$MAIN_CLUSTERGROUP_PROJECT"
         CHART_NAME="golang-external-secrets"
-        CHART_VERSION=0.1.*
+        CHART_VERSION="0.1.*"
 
     ;;
     *)
@@ -33,15 +33,15 @@ case "$STATE" in
     "present")
         common/scripts/manage-secret-namespace.sh "$NAMESPACE" "$STATE"
 
-        RES=$(yq ".clusterGroup.applications[] | select(.path == \"$CHART_LOCATION\")" "$MAIN_CLUSTERGROUP_FILE" 2>/dev/null)
+        RES=$(yq ".clusterGroup.applications[] | select(.chart == \"$CHART_NAME\")" "$MAIN_CLUSTERGROUP_FILE" 2>/dev/null)
         if [ -z "$RES" ]; then
-            echo "Application with chart location $CHART_LOCATION not found, adding"
+            echo "Application with chart name $CHART_NAME not found, adding"
             yq -i ".clusterGroup.applications.$APP_NAME = { \"name\": \"$APP_NAME\", \"namespace\": \"$NAMESPACE\", \"project\": \"$PROJECT\", \"chart\": \"$CHART_NAME\",  \"chartVersion\": \"$CHART_VERSION\"}" "$MAIN_CLUSTERGROUP_FILE"
         fi
     ;;
     "absent")
         common/scripts/manage-secret-namespace.sh "$NAMESPACE" "$STATE"
-        echo "Removing application wth chart location $CHART_LOCATION"
+        echo "Removing application with chart name $CHART_NAME"
         yq -i "del(.clusterGroup.applications[] | select(.chart == \"$CHART_NAME\"))" "$MAIN_CLUSTERGROUP_FILE"
     ;;
     *)

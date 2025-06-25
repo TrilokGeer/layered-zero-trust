@@ -1,7 +1,6 @@
 # This job requires a secret called DOCS_TOKEN which should be a PAT token
 # that has the permissions described in:
 # validatedpatterns/docs/.github/workflows/metadata-docs.yml@main
----
 name: Update docs pattern metadata
 
 on:
@@ -10,14 +9,16 @@ on:
       - "pattern-metadata.yaml"
       - ".github/workflows/update-metadata.yml"
 
+permissions:
+  contents: read  # Required for "read-all"
+  packages: write # Allows writing to packages
+  id-token: write # Allows creating OpenID Connect (OIDC) tokens
+
 jobs:
   update-metadata:
+    name: Update pattern metadata
     uses: validatedpatterns/docs/.github/workflows/metadata-docs.yml@main
-    permissions: # Workflow-level permissions
-      contents: read  # Required for "read-all"
-      packages: write # Allows writing to packages
-      id-token: write # Allows creating OpenID Connect (OIDC) tokens
     secrets: inherit
-    # For testing you can point to a different branch in the docs repository
+    # For testing you can add a 'with' section:
     # with:
-    #  DOCS_BRANCH: "main"
+    #   DOCS_BRANCH: "main"

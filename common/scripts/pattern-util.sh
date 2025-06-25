@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function is_available {
-  command -v $1 >/dev/null 2>&1 || { echo >&2 "$1 is required but it's not installed. Aborting."; exit 1; }
+  command -v "$1" >/dev/null 2>&1 || { echo >&2 "$1 is required but it's not installed. Aborting."; exit 1; }
 }
 
 function version {
@@ -23,7 +23,7 @@ if [ -n "${PATTERN_DISCONNECTED_HOME}" ]; then
 fi
 
 readonly commands=(podman)
-for cmd in ${commands[@]}; do is_available "$cmd"; done
+for cmd in "${commands[@]}"; do is_available "$cmd"; done
 
 UNSUPPORTED_PODMAN_VERSIONS="1.6 1.5"
 PODMAN_VERSION_STR=$(podman --version)
@@ -41,7 +41,7 @@ done
 PODMAN_VERSION=$(echo "${PODMAN_VERSION_STR}" | awk '{ print $NF }')
 
 # podman < 4.3.0 do not support keep-id:uid=...
-if [ $(version "${PODMAN_VERSION}") -lt $(version "4.3.0") ]; then
+if [ "$(version "${PODMAN_VERSION}")" -lt "$(version "4.3.0")" ]; then
     PODMAN_ARGS="-v ${HOME}:/root"
 else
     # We do not rely on bash's $UID and $GID because on MacOSX $GID is not set
@@ -63,7 +63,7 @@ fi
 # Detect if we use podman machine. If we do not then we bind mount local host ssl folders
 # if we are using podman machine then we do not bind mount anything (for now!)
 REMOTE_PODMAN=$(podman system connection list -q | wc -l)
-if [ $REMOTE_PODMAN -eq 0 ]; then # If we are not using podman machine we check the hosts folders
+if [ "${REMOTE_PODMAN}" -eq 0 ]; then # If we are not using podman machine we check the hosts folders
     # We check /etc/pki/tls because on ubuntu /etc/pki/fwupd sometimes
     # exists but not /etc/pki/tls and we do not want to bind mount in such a case
     # as it would find no certificates at all.
@@ -103,11 +103,11 @@ podman run -it --rm --pull=newer \
     -e K8S_AUTH_USERNAME \
     -e K8S_AUTH_PASSWORD \
     -e K8S_AUTH_TOKEN \
-    ${PKI_HOST_MOUNT_ARGS} \
+    "${PKI_HOST_MOUNT_ARGS}" \
     -v "${HOME}":"${HOME}" \
     -v "${HOME}":/pattern-home \
-    ${PODMAN_ARGS} \
-    ${EXTRA_ARGS} \
+    "${PODMAN_ARGS}" \
+    "${EXTRA_ARGS}" \
     -w "$(pwd)" \
     "$PATTERN_UTILITY_CONTAINER" \
-    $@
+    "$@"

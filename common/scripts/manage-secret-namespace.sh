@@ -4,7 +4,6 @@ NAMESPACE=$1
 STATE=$2
 
 MAIN_CLUSTERGROUP_FILE="./values-$(common/scripts/determine-main-clustergroup.sh).yaml"
-MAIN_CLUSTERGROUP_PROJECT="$(common/scripts/determine-main-clustergroup.sh)"
 
 case "$STATE" in
     "present")

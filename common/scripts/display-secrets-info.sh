@@ -12,17 +12,18 @@ COMMONPATH=$(dirname "${SCRIPTPATH}")
 PATTERNPATH=$(dirname "${COMMONPATH}")
 
 if [ "$#" -ge 1 ]; then
-    export VALUES_SECRET=$(get_abs_filename "${1}")
+    export VALUES_SECRET
+    VALUES_SECRET=$(get_abs_filename "${1}")
 fi
 
-if [[ "$#" == 2 ]]; then
+if [ "$#" = 2 ]; then
     SECRETS_BACKING_STORE="$2"
 else
-    SECRETS_BACKING_STORE="$($SCRIPTPATH/determine-secretstore-backend.sh)"
+    SECRETS_BACKING_STORE="$("${SCRIPTPATH}"/determine-secretstore-backend.sh)"
 fi
 
-PATTERN_NAME=$(basename "`pwd`")
+PATTERN_NAME=$(basename "$(pwd)")
 
 EXTRA_PLAYBOOK_OPTS="${EXTRA_PLAYBOOK_OPTS:-}"
 
-ansible-playbook -e pattern_name="${PATTERN_NAME}" -e pattern_dir="${PATTERNPATH}" -e secrets_backing_store="${SECRETS_BACKING_STORE}" -e hide_sensitive_output=false ${EXTRA_PLAYBOOK_OPTS} "rhvp.cluster_utils.display_secrets_info"
+ansible-playbook -e pattern_name="${PATTERN_NAME}" -e pattern_dir="${PATTERNPATH}" -e secrets_backing_store="${SECRETS_BACKING_STORE}" -e hide_sensitive_output=false "${EXTRA_PLAYBOOK_OPTS}" "rhvp.cluster_utils.display_secrets_info"

@@ -20,18 +20,18 @@ if [ "${APPNAME}" != "clustergroup" ]; then
   #   project: foo
   #   path: charts/all/foo
   # So we retrieve the actual index ("foobar") given the name attribute of the application
-  APP=$(yq ".clusterGroup.applications | with_entries(select(.value.name == \"$APPNAME\")) | keys | .[0]" values-$SITE.yaml)
-  isLocalHelmChart=$(yq ".clusterGroup.applications.$APP.path" values-$SITE.yaml)
-  if [ $isLocalHelmChart != "null" ]; then
-    chart=$(yq ".clusterGroup.applications.$APP.path" values-$SITE.yaml)
+  APP=$(yq ".clusterGroup.applications | with_entries(select(.value.name == \"$APPNAME\")) | keys | .[0]" "values-${SITE}.yaml")
+  isLocalHelmChart=$(yq ".clusterGroup.applications.$APP.path" "values-${SITE}.yaml")
+  if [ "$isLocalHelmChart" != "null" ]; then
+    chart=$(yq ".clusterGroup.applications.$APP.path" "values-${SITE}.yaml")
   else
-    helmrepo=$(yq ".clusterGroup.applications.$APP.repoURL" values-$SITE.yaml)
+    helmrepo=$(yq ".clusterGroup.applications.$APP.repoURL" "values-${SITE}.yaml")
     helmrepo="${helmrepo:+oci://quay.io/hybridcloudpatterns}"
-    chartversion=$(yq ".clusterGroup.applications.$APP.chartVersion" values-$SITE.yaml)
-    chartname=$(yq ".clusterGroup.applications.$APP.chart" values-$SITE.yaml)
+    chartversion=$(yq ".clusterGroup.applications.$APP.chartVersion" "values-${SITE}.yaml")
+    chartname=$(yq ".clusterGroup.applications.$APP.chart" "values-${SITE}.yaml")
     chart="${helmrepo}/${chartname} --version ${chartversion}"
   fi
-  namespace=$(yq ".clusterGroup.applications.$APP.namespace" values-$SITE.yaml)
+  namespace=$(yq ".clusterGroup.applications.$APP.namespace" "values-${SITE}.yaml")
 else
   APP=$APPNAME
   clusterGroupChartVersion=$(yq ".main.multiSourceConfig.clusterGroupChartVersion" values-global.yaml)
@@ -50,13 +50,13 @@ ocpversion=${OCP_VERSION:-$(oc get clusterversion/version -o jsonpath='{.status.
 domain=${OCP_DOMAIN:-$(oc get Ingress.config.openshift.io/cluster -o jsonpath='{.spec.domain}' | sed 's/^apps.//')}
 
 function replaceGlobals() {
-    output=$( echo $1 | sed -e 's/ //g' -e 's/\$//g' -e s@^-@@g  -e s@\'@@g )
+    output=$( echo "$1" | sed -e 's/ //g' -e 's/\$//g' -e s@^-@@g  -e s@\'@@g )
 
-    output=$(echo $output | sed "s@{{.Values.global.clusterPlatform}}@${platform}@g")
-    output=$(echo $output | sed "s@{{.Values.global.clusterVersion}}@${ocpversion}@g")
-    output=$(echo $output | sed "s@{{.Values.global.clusterDomain}}@${domain}@g")
+    output=$(echo "$output" | sed "s@{{.Values.global.clusterPlatform}}@${platform}@g")
+    output=$(echo "$output" | sed "s@{{.Values.global.clusterVersion}}@${ocpversion}@g")
+    output=$(echo "$output" | sed "s@{{.Values.global.clusterDomain}}@${domain}@g")
 
-    echo $output
+    echo "$output"
 }
 
 function getOverrides() {
@@ -83,31 +83,31 @@ CLUSTER_OPTS="$CLUSTER_OPTS --set global.clusterVersion=$ocpversion"
 CLUSTER_OPTS="$CLUSTER_OPTS --set global.clusterPlatform=$platform"
 
 
-sharedValueFiles=$(yq ".clusterGroup.sharedValueFiles" values-$SITE.yaml)
-appValueFiles=$(yq ".clusterGroup.applications.$APP.extraValueFiles" values-$SITE.yaml)
-isKustomize=$(yq ".clusterGroup.applications.$APP.kustomize" values-$SITE.yaml)
+sharedValueFiles=$(yq ".clusterGroup.sharedValueFiles" "values-${SITE}.yaml")
+appValueFiles=$(yq ".clusterGroup.applications.$APP.extraValueFiles" "values-${SITE}.yaml")
+isKustomize=$(yq ".clusterGroup.applications.$APP.kustomize" "values-${SITE}.yaml")
 OVERRIDES=$( getOverrides )
 
-VALUE_FILES="-f values-global.yaml -f values-$SITE.yaml"
+VALUE_FILES="-f values-global.yaml -f values-${SITE}.yaml"
 IFS=$'\n'
 for line in $sharedValueFiles; do
-    if [ $line != "null" ] && [ -f $line ]; then
-	    file=$(replaceGlobals $line)
-	    VALUE_FILES="$VALUE_FILES -f $PWD$file"
+    if [ "$line" != "null" ] && [ -f "$line" ]; then
+	    file=$(replaceGlobals "$line")
+	    VALUE_FILES="$VALUE_FILES -f ${PWD}${file}"
     fi
 done
 
 for line in $appValueFiles; do
-    if [ $line != "null" ] && [ -f $line ]; then
-	    file=$(replaceGlobals $line)
-	    VALUE_FILES="$VALUE_FILES -f $PWD$file"
+    if [ "$line" != "null" ] && [ -f "$line" ]; then
+	    file=$(replaceGlobals "$line")
+	    VALUE_FILES="$VALUE_FILES -f ${PWD}${file}"
     fi
 done
 
-if [ $isKustomize == "true" ]; then
-    kustomizePath=$(yq ".clusterGroup.applications.$APP.path" values-$SITE.yaml)
-    repoURL=$(yq ".clusterGroup.applications.$APP.repoURL" values-$SITE.yaml)
-    if [[ $repoURL == http* ]] || [[ $repoURL == git@ ]]; then
+if [ "$isKustomize" = "true" ]; then
+    kustomizePath=$(yq ".clusterGroup.applications.$APP.path" "values-${SITE}.yaml")
+    repoURL=$(yq ".clusterGroup.applications.$APP.repoURL" "values-${SITE}.yaml")
+    if [[ "$repoURL" == http* ]] || [[ "$repoURL" == git@ ]]; then
          kustomizePath="${repoURL}/${kustomizePath}"
     fi
     cmd="oc kustomize ${kustomizePath}"

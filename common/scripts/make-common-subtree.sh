@@ -15,8 +15,7 @@ if [ "$1" = "-h" ]; then
 fi
 
 if [ -f '/etc/redhat-release' ]; then
-  rpm -qa | grep git-subtree 2>&1
-  if [ ! $? = 0 ]; then
+  if ! rpm -qa | grep -q git-subtree 2>&1; then
     echo "you need to install git-subtree"
     echo "would you like to install it now?"
     select ANS in yes no
@@ -59,7 +58,7 @@ fi
 git diff --quiet || (echo "This script must be run on a clean working tree" && exit 1)
 
 echo "Changing directory to project root"
-cd `git rev-parse --show-toplevel`
+cd "$(git rev-parse --show-toplevel)" || exit
 
 echo "Removing existing common and replacing it with subtree from $subtree_repo $subtree_remote"
 rm -rf common
